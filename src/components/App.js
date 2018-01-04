@@ -4,11 +4,22 @@ import React, { Component } from 'react';
 // import ReactDOM from 'react-dom';
 // import logo from './logo.svg';
 import '../styles/App.scss';
-import firebase, { auth, provider } from '../firebase.js';
+// import firebase, { auth, provider } from '../firebase.js';
 
 import MemoService from './services/MemoService.js'
 
 import TagsList from './TagsList';
+
+
+import { render } from 'react-dom';
+
+const ReactMarkdown = require('react-markdown')
+
+import brace from 'brace';
+import AceEditor from 'react-ace';
+
+import 'brace/mode/javascript';
+import 'brace/theme/monokai';
 
 // import TokenAutocomplete from 'react-token-autocomplete';
 // import TokenAutocomplete from '../../node_modules/react-token-autocomplete/src/TokenAutocomplete';
@@ -456,6 +467,9 @@ class App extends Component {
   //       // saveUser2database(result.user)
   //     });
   // }
+  // onAceChange(newValue){
+  //   log(newValue)
+  // }
   handleSubmit(e) {
     e.preventDefault();
     // const itemsRef = firebase.database().ref('items');
@@ -468,7 +482,6 @@ class App extends Component {
     item.detail = e.target.detail.value
     // item.update_at = (new Date()).toString()
     item.update_at = new Date()
-
 
     let thisReact = this;
     // log(thisReact)
@@ -535,10 +548,15 @@ class App extends Component {
   }
   handleSubmitEdit(e) {
     e.preventDefault();
-    log(e.target.id)
 
+    let _id = e.target.idx.value
 
-    const itemsRef = firebase.database().ref('items');
+    let aceDetailElement = this.refs['__detail'+_id]
+    // log(aceDetailElement)
+    //
+    // log(aceDetailElement.editor.getValue())
+    // log(aceDetailElement.editor.value)
+
     // const item = {
     //   title: this.state.currentItem,
     //   user: this.state.user.displayName || this.state.user.email
@@ -552,7 +570,8 @@ class App extends Component {
     item.title = e.target.title.value
     item.tags = e.target.tags.value.split(',')
     item.links = e.target.links.value.split('\n')
-    item.detail = e.target.detail.value
+    // item.detail = e.target.detail.value
+    item.detail = aceDetailElement.editor.getValue()
     // item.update_at = (new Date()).toString()
     item.update_at = new Date()
 
@@ -781,9 +800,9 @@ class App extends Component {
 
     // log(ReactDOM.findDOMNode(this.refs['_title'+idx]))
     // log(this.state.itemsExt)
-    this.refs['_title'+idx].value = this.state.items[idx].title
-    this.refs['_detail'+idx].value = this.state.items[idx].detail
-    this.refs['_links'+idx].value = this.state.items[idx].links? this.state.items[idx].links.join('\n'): ''
+    // this.refs['_title'+idx].value = this.state.items[idx].title
+    // this.refs['_detail'+idx].value = this.state.items[idx].detail
+    // this.refs['_links'+idx].value = this.state.items[idx].links? this.state.items[idx].links.join('\n'): ''
     // ReactDOM.findDOMNode(this.refs['_title'+idx]).value = this.state.items[idx].title
     // ReactDOM.findDOMNode(this.refs['_detail'+idx]).value = this.state.items[idx].detail
     // ReactDOM.findDOMNode(this.refs['_links'+idx]).value = this.state.items[idx].links? this.state.items[idx].links.join('\n'): ''
@@ -1248,7 +1267,9 @@ class App extends Component {
                             <div className={this.state.itemsExt[itemsIdx].collapse ? 'content displayNone' : 'content'}>
                               <div>
                                 <i className="fa fa-info-circle" aria-hidden="true"></i>
-                                <div className='detail'>{item.detail}</div>
+                                <div className='detail'>
+                                <ReactMarkdown source={item.detail} />
+                                </div>
                               </div>
                               {links}
                               {tags}
@@ -1355,7 +1376,30 @@ class App extends Component {
                               {this.createTagCheckbox(this.state.tagsList,this.state.items[itemsIdx].tags,itemsIdx)}
                               <input type="text" name="tags" placeholder="tags (separated by ,)" onChange={(e) => this.handleChangeArray(e, itemsIdx)} value={this.state.items[itemsIdx].tags.join(',')} />
                               <div className='form-label'>Detail: </div>
-                              <textarea type="text" name="detail" placeholder="Details?" defaultValue={this.state.items[itemsIdx].detail}  ref={'_detail'+itemsIdx}/>
+                              <div className='container4ace'>
+                                <AceEditor
+                                  mode="javascript"
+                                  theme="monokai"
+                                  ref={'__detail'+itemsIdx}
+                                  value={this.state.items[itemsIdx].detail}
+                                  setOptions={{
+                                    highlightActiveLine: true,
+                                    showLineNumbers: true,
+                                    tabSize: 2,
+                                    minLines: 50,
+                                    maxLines: 100
+                                  }}
+                                  editorProps={{$blockScrolling: true}}
+                                 />
+                               </div>
+                               {
+                                 /*
+                                                                     autoScrollEditorIntoView: true,
+                                                                 editorProps={{$blockScrolling: true}}
+                                 <textarea type="text" name="detail" placeholder="Details?" defaultValue={this.state.items[itemsIdx].detail}  ref={'_detail'+itemsIdx}/>
+                                 */
+                               }
+
                               <div className='form-label'>Links: </div>
                               <textarea type="text" name="links" placeholder="related links" defaultValue={this.state.items[itemsIdx].links? this.state.items[itemsIdx].links.join('\n'): ''} ref={'_links'+itemsIdx} />
 

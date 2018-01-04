@@ -574,3 +574,20 @@ div.tags-list{
     font-size: 1.3em;
   }
 }
+
+.container4ace{
+  resize: both;
+  overflow: auto;
+  padding-right: 1em;
+  min-height: 10em;
+
+  .ace_editor{
+    width: 100% !important;
+    min-height: 10em !important;
+    height: 100% !important;
+
+    .ace_content{
+      height: 100% !important;
+    }
+  }
+}
