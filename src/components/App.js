@@ -214,6 +214,7 @@ class App extends Component {
   constructor() {
     super();
     this.state = {
+      editingDetail: '',
       currentItem: {
         owner: null,
         title: '',
@@ -245,6 +246,10 @@ class App extends Component {
     this.changeCheckboxTag = this.changeCheckboxTag.bind(this);
     this.sortItem = this.sortItem.bind(this);
     this.isItemChanged = this.isItemChanged.bind(this);
+    // this.onAceChange = this.onAceChange.bind(this);
+    this.previewMarkdown = this.previewMarkdown.bind(this);
+    this.sortItem = this.sortItem.bind(this);
+
 
     // this.handleKeyPress = this.handleKeyPress.bind(this);
     // this.toggleEditItem = this.toggleEditItem.bind(this);
@@ -468,8 +473,36 @@ class App extends Component {
   //     });
   // }
   // onAceChange(newValue){
-  //   log(newValue)
+  //   // log(newValue)
+  //   this.setState({
+  //     editingDetail: newValue
+  //   });
   // }
+  previewMarkdown(e,idx){
+    e.preventDefault();
+    log(idx)
+
+    let items = JSON.parse(JSON.stringify(this.state.items))
+    let editingDetail = this.refs['__detail'+idx].editor.getValue()
+
+
+    items[idx].detail = editingDetail
+
+    // log(this.refs['__detailPreview'+idx].children[0] )
+    // log(this.refs['__detailPreview'+idx].children[0].value )
+    // log(this.refs['__detailPreview'+idx].children[0].source )
+
+    // this.refs['__detailPreview'+idx].children[0].value = 'bbbb'
+    this.refs['__detailPreview'+idx].value = editingDetail
+    this.setState({
+      editingDetail: editingDetail,
+      items: items
+    });
+
+    // this.refs['__detail'+idx].editor.setValue(editingDetail)
+
+
+  }
   handleSubmit(e) {
     e.preventDefault();
     // const itemsRef = firebase.database().ref('items');
@@ -800,9 +833,9 @@ class App extends Component {
 
     // log(ReactDOM.findDOMNode(this.refs['_title'+idx]))
     // log(this.state.itemsExt)
-    // this.refs['_title'+idx].value = this.state.items[idx].title
+    this.refs['_title'+idx].value = this.state.items[idx].title
     // this.refs['_detail'+idx].value = this.state.items[idx].detail
-    // this.refs['_links'+idx].value = this.state.items[idx].links? this.state.items[idx].links.join('\n'): ''
+    this.refs['_links'+idx].value = this.state.items[idx].links? this.state.items[idx].links.join('\n'): ''
     // ReactDOM.findDOMNode(this.refs['_title'+idx]).value = this.state.items[idx].title
     // ReactDOM.findDOMNode(this.refs['_detail'+idx]).value = this.state.items[idx].detail
     // ReactDOM.findDOMNode(this.refs['_links'+idx]).value = this.state.items[idx].links? this.state.items[idx].links.join('\n'): ''
@@ -1339,14 +1372,14 @@ class App extends Component {
                                 <textarea type="text" name="detail" placeholder="Details?" onChange={(e) => this.handleChange(e, itemsIdx)} value={this.state.items[itemsIdx].detail} />
                                 <div className='form-label'>Links: </div>
                                 <textarea type="text" name="links" placeholder="related links" onChange={(e) => this.handleChangeArray(e, itemsIdx)} value={this.state.items[itemsIdx].links? this.state.items[itemsIdx].links.join('\n'): ''} />
-                                <input type="text" name="title" placeholder="title?" defaultValue={this.state.items[itemsIdx].title} ref={input => this._title = input} />
-                                <input type="text" name="title" placeholder="title?" defaultValue={this.state.items[itemsIdx].title} ref={input => this.refs['_title'+itemsIdx] = input} />
+                                <input type="text" name="title" placeholder="title?" value={this.state.items[itemsIdx].title} ref={input => this._title = input} />
+                                <input type="text" name="title" placeholder="title?" value={this.state.items[itemsIdx].title} ref={input => this.refs['_title'+itemsIdx] = input} />
                                 */
                               }
                               <input type="hidden" name="id" placeholder="id" readOnly="true" value={item.id} />
                               <input type="hidden" name="idx" placeholder="idx" readOnly="true" value={itemsIdx} />
                               <div className='form-label'>Title: </div>
-                              <input type="text" name="title" placeholder="title?" defaultValue={this.state.items[itemsIdx].title} ref={'_title'+itemsIdx} />
+                              <input type="text" name="title" placeholder="title?" onChange={(e)=> {}} defaultValue={this.state.items[itemsIdx].title } ref={'_title'+itemsIdx} />
                               <div className='form-label'>Tags: </div>
                               {
                                 /*
@@ -1375,12 +1408,18 @@ class App extends Component {
 
                               {this.createTagCheckbox(this.state.tagsList,this.state.items[itemsIdx].tags,itemsIdx)}
                               <input type="text" name="tags" placeholder="tags (separated by ,)" onChange={(e) => this.handleChangeArray(e, itemsIdx)} value={this.state.items[itemsIdx].tags.join(',')} />
-                              <div className='form-label'>Detail: </div>
+                              <div className='form-label'>Detail:
+                                <div className='btn-detail_preview right'>
+                                 <input type='button' onClick={(e) => this.previewMarkdown(e,itemsIdx)} value='Preview refresh' />
+                                </div>
+                              </div>
+
                               <div className='container4ace'>
                                 <AceEditor
                                   mode="javascript"
                                   theme="monokai"
                                   ref={'__detail'+itemsIdx}
+                                  onChange={this.onAceChange}
                                   value={this.state.items[itemsIdx].detail}
                                   setOptions={{
                                     highlightActiveLine: true,
@@ -1392,16 +1431,24 @@ class App extends Component {
                                   editorProps={{$blockScrolling: true}}
                                  />
                                </div>
+
+                               <div className='detail_preview'  ref={'__detailPreview'+itemsIdx}>
+                               <ReactMarkdown source={this.state.editingDetail}/>
+
+                               </div>
                                {
                                  /*
+
+                                                                 <div ref={'s__detailPreview'+itemsIdx} />
+                                 <ReactMarkdown source={this.state.editingDetail} />
                                                                      autoScrollEditorIntoView: true,
                                                                  editorProps={{$blockScrolling: true}}
-                                 <textarea type="text" name="detail" placeholder="Details?" defaultValue={this.state.items[itemsIdx].detail}  ref={'_detail'+itemsIdx}/>
+                                 <textarea type="text" name="detail" placeholder="Details?" value={this.state.items[itemsIdx].detail}  ref={'_detail'+itemsIdx}/>
                                  */
                                }
 
                               <div className='form-label'>Links: </div>
-                              <textarea type="text" name="links" placeholder="related links" defaultValue={this.state.items[itemsIdx].links? this.state.items[itemsIdx].links.join('\n'): ''} ref={'_links'+itemsIdx} />
+                              <textarea type="text" name="links" placeholder="related links" onChange={(e)=> {}} defaultValue={this.state.items[itemsIdx].links? this.state.items[itemsIdx].links.join('\n'): ''} ref={'_links'+itemsIdx} />
 
                             </form>
                           </div>

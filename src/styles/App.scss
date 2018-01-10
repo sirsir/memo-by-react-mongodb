@@ -580,6 +580,8 @@ div.tags-list{
   overflow: auto;
   padding-right: 1em;
   min-height: 10em;
+  display: inline-block;
+  width: 60%;
 
   .ace_editor{
     width: 100% !important;
@@ -590,4 +592,25 @@ div.tags-list{
       height: 100% !important;
     }
   }
+}
+
+.btn-detail_preview{
+  font-size: 0.8em;
+  display: inline-block;
+  margin-left: 60%;
+
+  input{
+    border-radius: 1em;
+    border-color: transparent;
+    background-color: aliceblue;
+  }
+}
+
+.detail_preview{
+  display: inline-block;
+  width: 40%;
+  margin: 0;
+  padding: 1em;
+  vertical-align: top;
+  background-color: aliceblue;
 }

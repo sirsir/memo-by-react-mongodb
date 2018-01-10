@@ -18,7 +18,13 @@ var port = process.env.API_PORT || 3002;
 
 //db config -- REPLACE USERNAME/PASSWORD/DATABASE WITH YOUR OWN FROM MLAB!
 // var mongoDB = 'mongodb://localhost:27017/sirMemo';
-var mongoDB = 'mongodb://localhost:27017/sirMemo';
+
+var ip = require("ip").address();
+console.dir ( ip );
+
+// ip = 'localhost'
+
+var mongoDB = 'mongodb://' + ip + ':27017/sirMemo';
 // var mongoDB = 'mongodb://sirisak:password@192.168.1.149/sirMemo';
 
 // mongoose.Promise = global.Promise;
@@ -220,6 +226,6 @@ router.route('/memos/edit/:memo_id')
 app.use('/api', router);
 
 //starts the server and listens for requests
-app.listen(port, function() {
+app.listen(port,'0.0.0.0', function() {
   console.log(`api running on port ${port}`);
 });

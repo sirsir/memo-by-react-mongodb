@@ -1,6 +1,19 @@
 var $ = require('jquery');
 var promise = require('es6-promise');
-var resourceUrl = 'http://localhost:3002/api/memos';
+// var ip = require('ip').address();
+// ~~~ MANUAL bcoz above comment not work
+var ip = '192.168.1.173'
+
+// console.log(require('ip'))
+
+// const internalIp = require('internal-ip');
+//
+// ip = internalIp.v4.sync()
+
+// console.dir ( ip );
+// var resourceUrl = 'http://localhost:3002/api/memos';
+
+var resourceUrl = 'http://'+ip+':3002/api/memos';
 
 module.exports = {
     add: function (item) {
