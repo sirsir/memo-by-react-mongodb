@@ -20,6 +20,9 @@ function getClientEnvironment(publicUrl) {
       // For example, <img src={process.env.PUBLIC_URL + '/img/logo.png'} />.
       // This should only be used as an escape hatch. Normally you would put
       // images into the `src` and `import` them in code to get their paths.
+      'API_IP': JSON.stringify(
+        process.env.API_IP || 'localhost'
+      ),
       'PUBLIC_URL': JSON.stringify(publicUrl)
     });
   return {'process.env': processEnv};

@@ -30,6 +30,8 @@ var schema   = new mongoose.Schema({
     timestamp: Date
 });
 
+schema.index({'$**': 'text'});
+
 schema.methods.addTimeStamp = function() {
   // console.log("aaa")
   // console.log(this)

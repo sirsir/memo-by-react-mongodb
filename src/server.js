@@ -172,23 +172,100 @@ router.route('/memos/:memo_id')
 
 
 router.route('/memos/edit/:memo_id')
-.post(function(req, res) {
-  let id = req.params.memo_id
-  let doc = req.body
-  // console.log(JSON.stringify(req.body,null,"\t"))
-  // console.log(req.params)
+  .post(function(req, res) {
+    let id = req.params.memo_id
+    let doc = req.body
+    // console.log(JSON.stringify(req.body,null,"\t"))
+    // console.log(req.params)
 
-  Memo.findByIdAndUpdate(id, doc, function (err, resp) {
-    if (err){
-      res.send(err);
-    }
-    res.send(resp);
-  });
+    Memo.findByIdAndUpdate(id, doc, function (err, resp) {
+      if (err){
+        res.send(err);
+      }
+      res.send(resp);
+    });
+
+  })
+
+  router.route('/memos/tagslist')
+    .get(function(req, res) {
+
+      Memo.find({},{tags: 1})
+         .exec(function(err, docs) {
+           console.log("Memo.find() by /memos/tagslist")
+           if (err){
+             res.send(err);
+           }
+
+           // docs[0].aaa='aaaaaaa'
+           // console.log(docs[0])
+           // docs.addTimeStamp()
+           // console.log(docs[0])
+           var tagsList = [{tag: 'untagged', count: 0}]
+           // var tagsObj = {notags: 0}
+
+           docs.forEach(function(item){
+               item.tags.forEach(function(tag){
+                 let tagObj = tagsList.find((element) => {
+                   return element.tag === tag;
+                 })
+
+                 if (tagObj){
+                   tagObj.count++;
+                 } else {
+                   tagsList.push({
+                     tag: tag,
+                     count: 1
+                   })
+                 }
+               })
+           })
+
+           // console.log(tagsObj)
+
+           res.send(tagsList);
+         });
 
 
+    })
+
+router.route('/memos/search/:keyword')
+  .get(function(req, res) {
+    let keyword = req.params.keyword
+    Memo.find({$text: {$search: keyword}})
+       // .skip(20)
+       // .limit(10)
+       .exec(function(err, docs) {
+         console.log("Memo.find()")
+         if (err){
+           res.send(err);
+         }
+
+         docs.forEach( doc =>  doc.addTimeStamp() )
+         // docs[0].aaa='aaaaaaa'
+         // console.log(docs[0])
+         // docs.addTimeStamp()
+         // console.log(docs[0])
+         res.send(docs);
+       });
+
+    // Memo.find( {},function (err, docs) {
+    //   console.log("Memo.find()")
+    //   if (err){
+    //     res.send(err);
+    //   }
+    //
+    //   docs.forEach( doc =>  doc.addTimeStamp() )
+    //   // docs[0].aaa='aaaaaaa'
+    //   // console.log(docs[0])
+    //   // docs.addTimeStamp()
+    //   // console.log(docs[0])
+    //   res.send(docs);
+    // })
 
 
-})
+  })
+
 
 
 //Adding a route to a specific comment based on the database ID

@@ -185,6 +185,7 @@ header i {
   }
 }
 
+
 .display-item {
   display: table;
   width: 100%;
@@ -199,11 +200,11 @@ header i {
   }
 
 
-  ul{
+  &>.wrapper>ul{
     display: table-cell;
     width: 100%;
 
-    li{
+    &>li{
       margin: 0 0 0.5em 0;
       width: 100%;
       background-color: #fff;
@@ -445,7 +446,7 @@ button {
 }
 
 .displayNone{
-  display: none;
+  display: none !important;
 }
 
 .titlebar{
@@ -579,9 +580,9 @@ div.tags-list{
   resize: both;
   overflow: auto;
   padding-right: 1em;
-  min-height: 10em;
+  min-height: 10em !important;
   display: inline-block;
-  width: 60%;
+  width: 60% !important;
 
   .ace_editor{
     width: 100% !important;
@@ -594,6 +595,20 @@ div.tags-list{
   }
 }
 
+.btn-switchEditor{
+  font-size: 0.8em;
+  display: inline-block;
+  margin-left: 10%;
+
+  input{
+    border-radius: 1em;
+    border-color: transparent;
+    background-color: aliceblue;
+    width: auto;
+    display: inline-block;
+  }
+}
+
 .btn-detail_preview{
   font-size: 0.8em;
   display: inline-block;
@@ -603,6 +618,8 @@ div.tags-list{
     border-radius: 1em;
     border-color: transparent;
     background-color: aliceblue;
+    width: auto;
+    display: inline-block;
   }
 }
 
@@ -613,4 +630,23 @@ div.tags-list{
   padding: 1em;
   vertical-align: top;
   background-color: aliceblue;
+}
+
+.detail{
+  ul{
+    display: block;
+    list-style-type: disc;
+    margin-left: 2em;
+    li{
+      display: list-item;
+      list-style-type: disc;
+      background-color: transparent;
+      border: 0px;
+      box-shadow: none;
+      margin: 0px 0px 0px 0px;
+      li{
+        list-style-type: circle;
+      }
+    }
+  }
 }

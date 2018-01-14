@@ -231,6 +231,7 @@ class App extends Component {
         newItem: false,
         tagsList: false
       },
+      displayAceEditor: true,
       tagsList:[],
       searchKeyword: '',
       sortBy: ''
@@ -248,8 +249,10 @@ class App extends Component {
     this.isItemChanged = this.isItemChanged.bind(this);
     // this.onAceChange = this.onAceChange.bind(this);
     this.previewMarkdown = this.previewMarkdown.bind(this);
+    this.clearSearchBox = this.clearSearchBox.bind(this);
+    this.searchSearchBox = this.searchSearchBox.bind(this);
+    this.handleKeyPressSearchbox = this.handleKeyPressSearchbox.bind(this);
     this.sortItem = this.sortItem.bind(this);
-
 
     // this.handleKeyPress = this.handleKeyPress.bind(this);
     // this.toggleEditItem = this.toggleEditItem.bind(this);
@@ -258,45 +261,64 @@ class App extends Component {
     // this.saveUser2database = this.saveUser2database.bind(this);
   }
   updateTagsList(){
-    var tagsList = [{tag: 'untagged', count: 0}]
+    let thisReact = this
+    MemoService.getTags()
+    .then(function (res) {
+      let tagsList = res;
+      // log(res)
+      // item = res
+      tagsList.sort(function(a,b){
+        // log(a.tag > b.tag)
+        return (a.tag.localeCompare(b.tag))
+      })
 
-    this.state.items.concat([this.state.currentItem]).forEach(function(item,idx){
-      if (item.tags.length === 0)
-      {
-        tagsList[0].count++
-      }
-      item.tags.forEach(function(tag){
+      // log(JSON.stringify(tagsList))
 
-        // log(tag)
-        let tagObj = tagsList.find((element) => {
-          return element.tag === tag;
-        })
-
-        // log(tagObj)
-
-        if (tagObj){
-          tagObj.count++;
-        } else {
-          tagsList.push({
-            tag: tag,
-            count: 1
-          })
-        }
-
+      thisReact.setState({
+        tagsList: tagsList
       })
     })
 
-    // tagsList.sort(function(a,b){log(a.tag);return itemsIdx2show.sort(function(a,b){return (a.tag >b .tag)})})
-    tagsList.sort(function(a,b){
-      // log(a.tag > b.tag)
-      return (a.tag.localeCompare(b.tag))
-    })
 
-    // log(JSON.stringify(tagsList))
-
-    this.setState({
-      tagsList: tagsList
-    });
+    // var tagsList = [{tag: 'untagged', count: 0}]
+    //
+    // this.state.items.concat([this.state.currentItem]).forEach(function(item,idx){
+    //   if (item.tags.length === 0)
+    //   {
+    //     tagsList[0].count++
+    //   }
+    //   item.tags.forEach(function(tag){
+    //
+    //     // log(tag)
+    //     let tagObj = tagsList.find((element) => {
+    //       return element.tag === tag;
+    //     })
+    //
+    //     // log(tagObj)
+    //
+    //     if (tagObj){
+    //       tagObj.count++;
+    //     } else {
+    //       tagsList.push({
+    //         tag: tag,
+    //         count: 1
+    //       })
+    //     }
+    //
+    //   })
+    // })
+    //
+    // // tagsList.sort(function(a,b){log(a.tag);return itemsIdx2show.sort(function(a,b){return (a.tag >b .tag)})})
+    // tagsList.sort(function(a,b){
+    //   // log(a.tag > b.tag)
+    //   return (a.tag.localeCompare(b.tag))
+    // })
+    //
+    // // log(JSON.stringify(tagsList))
+    //
+    // this.setState({
+    //   tagsList: tagsList
+    // });
 
   }
   // toggleEditItem(e){
@@ -373,7 +395,7 @@ class App extends Component {
       }))
 
       if (e.target.name === 'tags'){
-        setTimeout(()=>this.updateTagsList(),1);
+        // setTimeout(()=>this.updateTagsList(),1);
       }
     }
     else {
@@ -393,7 +415,7 @@ class App extends Component {
       }))
 
       if (e.target.name === 'tags'){
-        setTimeout(()=>this.updateTagsList(),1);
+        // setTimeout(()=>this.updateTagsList(),1);
       }
     }
 
@@ -472,18 +494,89 @@ class App extends Component {
   //       // saveUser2database(result.user)
   //     });
   // }
-  // onAceChange(newValue){
-  //   // log(newValue)
-  //   this.setState({
-  //     editingDetail: newValue
-  //   });
-  // }
+  onTextareaChange(e,idx){
+    // log(newValue)
+    // this.setState({
+      // editingDetail: newValue
+      // log(this.refs['_detail'+idx].value)
+
+      // setTimeout(()=>{
+      //   var editingDetail = this.refs['_detail'+idx].value
+      //   this.refs['__detail'+idx].editor.setValue(editingDetail)
+      // }, 500)
+
+    // });
+  }
+  onAceChange(value,idx){
+    // log(newValue)
+    // this.setState({
+      // editingDetail: newValue
+      // log(this.refs['_detail'+idx].value)
+      // setTimeout(()=>{
+      //   if (this.refs['_detail'+idx].value !== value){
+      //     this.refs['_detail'+idx].value = value
+      //   }
+      // }, 500)
+
+
+      // this.refs['__detail'+idx].editor.setValue(editingDetail)
+    // });
+  }
+
+  clearSearchBox(){
+    this.refs.searchbox.value = ''
+  }
+  handleKeyPressSearchbox(e){
+    if (e.key === 'Enter') {
+     this.searchSearchBox()
+    }
+  }
+  searchSearchBox(){
+    let keyword = this.refs.searchbox.value
+
+    log(keyword)
+    let thisReact = this
+    MemoService.find(keyword)
+    .then(function (res) {
+      let items = res;
+      log(res)
+      // item = res
+      thisReact.setStateFromItem(res)
+    })
+  }
+
+  swithchEditor(e,idx){
+    e.preventDefault();
+
+    if (this.state.displayAceEditor){
+      this.refs['_detail'+idx].value = this.refs['__detail'+idx].editor.getValue()
+    } else {
+      console.log(this.refs['_detail'+idx].value)
+      this.refs['__detail'+idx].editor.setValue(this.refs['_detail'+idx].value)
+      // this.refs['__detail'+idx].editor.setValue('aaaa')
+    }
+
+    this.setState({
+      displayAceEditor: ! this.state.displayAceEditor
+    })
+
+
+  }
+
   previewMarkdown(e,idx){
     e.preventDefault();
     log(idx)
 
     let items = JSON.parse(JSON.stringify(this.state.items))
-    let editingDetail = this.refs['__detail'+idx].editor.getValue()
+
+    let editingDetail = ''
+
+    if (this.state.displayAceEditor){
+      editingDetail = this.refs['__detail'+idx].editor.getValue()
+    } else {
+      editingDetail = this.refs['_detail'+idx].value
+    }
+
 
 
     items[idx].detail = editingDetail
@@ -533,7 +626,7 @@ class App extends Component {
         editMode: false,
         collapse: true,
         lastState: JSON.parse(JSON.stringify(item2)),
-        searchable: JSON.stringify(item2)
+        // searchable: JSON.stringify(item2)
       }})
 
       // itemsIdx2show.push(items.length-1)
@@ -583,8 +676,16 @@ class App extends Component {
     e.preventDefault();
 
     let _id = e.target.idx.value
+    let detail = ''
+    if (this.state.displayAceEditor){
+      // let aceDetailElement = this.refs['__detail'+_id]
+      detail = this.refs['__detail'+_id].editor.getValue()
+    } else {
 
-    let aceDetailElement = this.refs['__detail'+_id]
+      detail = this.refs['_detail'+_id].value
+      // this.refs['__detail'+idx].editor.setValue('aaaa')
+    }
+
     // log(aceDetailElement)
     //
     // log(aceDetailElement.editor.getValue())
@@ -604,7 +705,8 @@ class App extends Component {
     item.tags = e.target.tags.value.split(',')
     item.links = e.target.links.value.split('\n')
     // item.detail = e.target.detail.value
-    item.detail = aceDetailElement.editor.getValue()
+
+    item.detail = detail
     // item.update_at = (new Date()).toString()
     item.update_at = new Date()
 
@@ -655,7 +757,10 @@ class App extends Component {
       'uid' : '0eSb19kpk5dj6eUzWllnYjC1zaj1'
     }
     let thisReact = this
-    this.setState({ user: user });
+    this.setState({
+      user: user,
+      searchKeyword: 'todo'
+     });
     // auth.onAuthStateChanged((user) => {
     //   if (user) {
     //     this.setState({ user });
@@ -669,61 +774,21 @@ class App extends Component {
     //   log(memos);
     // });
 
-    var setStateFromItem = function(items){
-      let newState = [];
-      // console.log(this.state.user.uid)
-      items.forEach(function(item,idx){
-        newState.push({
-          id: item._id,
-          title: item.title,
-          detail: item.detail,
-          // user: items[item].user,
-          links: item.links,
-          tags: item.tags,
-          owner: item.owner,
-          timestamp: item.timestamp,
-          update_at: item.update_at
-        });
-      })
 
-      let itemsExt = JSON.parse(JSON.stringify(newState)).map((item) => {return {
-        editMode: false,
-        collapse: true,
-        lastState: JSON.parse(JSON.stringify(item)),
-        searchable: JSON.stringify(item)
-      }})
 
-      // log(itemsExt)
-
-      let itemsIdx2show = JSON.parse(JSON.stringify(newState)).map((item,idx) => {return idx})
-      itemsIdx2show.sort(function(a,b){return b-a})
-
-      // log(itemsIdx2show)
-      // log(thisReact)
-
-      thisReact.setState({
-        // items: 'ddd'
-        items: newState,
-        itemsExt: itemsExt,
-        itemsIdx2show: itemsIdx2show
-      });
-
-      thisReact.updateTagsList();
-    }
-
-    MemoService.find()
+    MemoService.find('todo')
     .then(function (res) {
       let items = res;
       // log(res)
       // item = res
-      setStateFromItem(res)
+      thisReact.setStateFromItem(res)
     })
 
   }
   searchTag(tagIn){
-    log(this.state.items)
-    log(111)
-    log(tagIn)
+    // log(this.state.items)
+    // log(111)
+    // log(tagIn)
 
     let itemsIdx2show = []
     log(itemsIdx2show)
@@ -756,6 +821,47 @@ class App extends Component {
     });
 
     // log(tagIn)
+  }
+  setStateFromItem(items){
+    let newState = [];
+    // console.log(this.state.user.uid)
+    items.forEach(function(item,idx){
+      newState.push({
+        id: item._id,
+        title: item.title,
+        detail: item.detail,
+        // user: items[item].user,
+        links: item.links,
+        tags: item.tags,
+        owner: item.owner,
+        timestamp: item.timestamp,
+        update_at: item.update_at
+      });
+    })
+
+    let itemsExt = JSON.parse(JSON.stringify(newState)).map((item) => {return {
+      editMode: false,
+      collapse: true,
+      lastState: JSON.parse(JSON.stringify(item))
+      // searchable: JSON.stringify(item)
+    }})
+
+    // log(itemsExt)
+
+    let itemsIdx2show = JSON.parse(JSON.stringify(newState)).map((item,idx) => {return idx})
+    // itemsIdx2show.sort(function(a,b){return b-a})
+
+    // log(itemsIdx2show)
+    // log(thisReact)
+
+    this.setState({
+      // items: 'ddd'
+      items: newState,
+      itemsExt: itemsExt,
+      itemsIdx2show: itemsIdx2show
+    });
+
+    this.updateTagsList();
   }
   removeItem(e, itemId) {
     e.preventDefault()
@@ -834,7 +940,7 @@ class App extends Component {
     // log(ReactDOM.findDOMNode(this.refs['_title'+idx]))
     // log(this.state.itemsExt)
     this.refs['_title'+idx].value = this.state.items[idx].title
-    // this.refs['_detail'+idx].value = this.state.items[idx].detail
+    this.refs['_detail'+idx].value = this.state.items[idx].detail
     this.refs['_links'+idx].value = this.state.items[idx].links? this.state.items[idx].links.join('\n'): ''
     // ReactDOM.findDOMNode(this.refs['_title'+idx]).value = this.state.items[idx].title
     // ReactDOM.findDOMNode(this.refs['_detail'+idx]).value = this.state.items[idx].detail
@@ -1106,13 +1212,18 @@ class App extends Component {
             <div className='container'>
             <section id="searchbox">
               <div id="searchbox-box">
+              {
+                /*
                 <input autoComplete="off" autoCorrect="off" className="form-control input-lg" id="search-input" placeholder="Type in keyword here in format 'keyword1&&keyword2&&-keywordX1'" spellCheck="false" tabIndex="1" onChange={(e) => this.handleInputChange(e,'searchKeyword')} value={this.state.searchKeyword}/>
+                */
+              }
+                <input ref='searchbox' autoComplete="off" autoCorrect="off" className="form-control input-lg" id="search-input" placeholder="Type in keyword here in format 'keyword1&&keyword2&&-keywordX1'" spellCheck="false" tabIndex="1" onKeyPress={this.handleKeyPressSearchbox} defaultValue='todo'/>
               </div>
              <div id="searchbox-search-icon">
-                <div className="table"><a aria-hidden="true" className="fa fa-search" href="#" id="search-clear"><span className="sr-only">Search</span></a></div>
+                <div className="table"><a aria-hidden="true" className="fa fa-search" href="#" onClick={this.searchSearchBox} id="search-clear"><span className="sr-only">Search</span></a></div>
              </div>
              <div id="searchbox-clear-icon">
-                <div className="table"><a aria-hidden="true" className="fa fa-times-circle" href="#" id="search-clear"><span className="sr-only">Clear search</span></a></div>
+                <div className="table"><a aria-hidden="true" className="fa fa-times-circle" href="#" onClick={this.clearSearchBox} id="search-clear"><span className="sr-only">Clear search</span></a></div>
              </div>
             </section>
             <div id="tools">
@@ -1408,18 +1519,23 @@ class App extends Component {
 
                               {this.createTagCheckbox(this.state.tagsList,this.state.items[itemsIdx].tags,itemsIdx)}
                               <input type="text" name="tags" placeholder="tags (separated by ,)" onChange={(e) => this.handleChangeArray(e, itemsIdx)} value={this.state.items[itemsIdx].tags.join(',')} />
-                              <div className='form-label'>Detail:
+                              <div className='form-label'>
+                              <span>Detail: </span>
+                              <div className='btn-switchEditor' >
+                              <input type='button' onClick={(e) => this.swithchEditor(e,itemsIdx)} value='Switch Editor' />
+                              </div>
                                 <div className='btn-detail_preview right'>
-                                 <input type='button' onClick={(e) => this.previewMarkdown(e,itemsIdx)} value='Preview refresh' />
+
+                                 <input type='button' onClick={(e) => this.previewMarkdown(e,itemsIdx)} value='Markdown update' />
                                 </div>
                               </div>
 
-                              <div className='container4ace'>
+                              <div className={this.state.displayAceEditor ? 'container4ace' : 'container4ace displayNone'}>
                                 <AceEditor
                                   mode="javascript"
                                   theme="monokai"
                                   ref={'__detail'+itemsIdx}
-                                  onChange={this.onAceChange}
+                                  onChange={(value)=>this.onAceChange(value,itemsIdx)}
                                   value={this.state.items[itemsIdx].detail}
                                   setOptions={{
                                     highlightActiveLine: true,
@@ -1430,14 +1546,18 @@ class App extends Component {
                                   }}
                                   editorProps={{$blockScrolling: true}}
                                  />
-                               </div>
 
+                               </div>
+                               <textarea type="text" name="detail" placeholder="Details?" className={this.state.displayAceEditor ? 'displayNone' : 'container4ace'} onChange={(e)=> this.onTextareaChange(e,itemsIdx)} defaultValue={this.state.items[itemsIdx].detail}  ref={'_detail'+itemsIdx}/>
                                <div className='detail_preview'  ref={'__detailPreview'+itemsIdx}>
                                <ReactMarkdown source={this.state.editingDetail}/>
 
-                               </div>
+                              </div>
+
+
                                {
                                  /*
+                                 <textarea type="text" name="detail" placeholder="Details?" className={this.state.displayAceEditor ? 'displayNone' : ''} onChange={(e)=> this.onTextareaChange(e,itemsIdx)} defaultValue={this.state.items[itemsIdx].detail}  ref={'_detail'+itemsIdx}/>
 
                                                                  <div ref={'s__detailPreview'+itemsIdx} />
                                  <ReactMarkdown source={this.state.editingDetail} />

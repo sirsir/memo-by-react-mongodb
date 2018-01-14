@@ -1,5 +1,6 @@
 process.env.NODE_ENV = 'development';
-
+// console.log(process.env)
+// process.env.API_IP = 'localhost';
 // Load environment variables from .env file. Suppress warnings using silent
 // if this file is missing. dotenv will never modify any environment variables
 // that have already been set.
@@ -24,6 +25,8 @@ var paths = require('../config/paths');
 if (!checkRequiredFiles([paths.appHtml, paths.appIndexJs])) {
   process.exit(1);
 }
+
+clearConsole = () => {}
 
 // Tools like Cloud9 rely on this.
 var DEFAULT_PORT = process.env.PORT || 3001;
