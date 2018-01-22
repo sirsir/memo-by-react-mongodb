@@ -234,7 +234,7 @@ class App extends Component {
       displayAceEditor: true,
       tagsList:[],
       searchKeyword: '',
-      sortBy: ''
+      sortBy: '-time'
     }
     this.handleChange = this.handleChange.bind(this);
     this.handleChangeNewItem = this.handleChangeNewItem.bind(this);
@@ -252,7 +252,7 @@ class App extends Component {
     this.clearSearchBox = this.clearSearchBox.bind(this);
     this.searchSearchBox = this.searchSearchBox.bind(this);
     this.handleKeyPressSearchbox = this.handleKeyPressSearchbox.bind(this);
-    this.sortItem = this.sortItem.bind(this);
+    // this.sortItem = this.sortItem.bind(this);
 
     // this.handleKeyPress = this.handleKeyPress.bind(this);
     // this.toggleEditItem = this.toggleEditItem.bind(this);
@@ -777,11 +777,14 @@ class App extends Component {
 
 
     MemoService.find('todo')
-    .then(function (res) {
+    .then( (res) => {
       let items = res;
       // log(res)
       // item = res
+
       thisReact.setStateFromItem(res)
+
+      thisReact.sortItem(null,'-time')
     })
 
   }
@@ -1541,8 +1544,8 @@ class App extends Component {
                                     highlightActiveLine: true,
                                     showLineNumbers: true,
                                     tabSize: 2,
-                                    minLines: 50,
-                                    maxLines: 100
+                                    minLines: 20,
+                                    maxLines: 40
                                   }}
                                   editorProps={{$blockScrolling: true}}
                                  />

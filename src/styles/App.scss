@@ -577,17 +577,20 @@ div.tags-list{
 }
 
 .container4ace{
+  $height: 30em;
+
   resize: both;
   overflow: auto;
   padding-right: 1em;
-  min-height: 10em !important;
+  min-height: $height !important;
   display: inline-block;
   width: 60% !important;
 
   .ace_editor{
     width: 100% !important;
-    min-height: 10em !important;
+    min-height: $height !important;
     height: 100% !important;
+    // height: auto;
 
     .ace_content{
       height: 100% !important;
@@ -632,7 +635,8 @@ div.tags-list{
   background-color: aliceblue;
 }
 
-.detail{
+.detail,
+.detail_preview{
   ul{
     display: block;
     list-style-type: disc;
