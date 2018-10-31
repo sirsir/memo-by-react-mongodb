@@ -9,3 +9,9 @@ npm start
 
 To make it static:(NOT WORK!!!)
 npm run build
+
+
+
+Sir:
+API_IP=192.168.1.173 PORT=3009 node scripts/start.js
+API_PORT=3008 nodemon src/server.js

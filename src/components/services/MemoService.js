@@ -5,7 +5,7 @@ var promise = require('es6-promise');
 var ip = process.env.API_IP || 'localhost'
 
 // var ip = require('ip').address();
-console.dir ( ip );
+// console.dir ( ip );
 
 // console.log(require('ip'))
 
@@ -13,10 +13,10 @@ console.dir ( ip );
 //
 // ip = internalIp.v4.sync()
 
-console.dir ( process.env );
+// console.dir ( process.env );
 // var resourceUrl = 'http://localhost:3002/api/memos';
 
-var resourceUrl = 'http://'+ip+':3002/api/memos';
+var resourceUrl = 'http://'+ip+':3008/api/memos';
 
 module.exports = {
     add: function (item) {
@@ -52,7 +52,7 @@ module.exports = {
 
     },
     find: function (keyword) {
-      console.log(process.env)
+      // console.log(process.env)
 
         var Promise = promise.Promise;
 

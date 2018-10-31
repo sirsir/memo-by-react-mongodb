@@ -593,7 +593,11 @@ div.tags-list{
     // height: auto;
 
     .ace_content{
-      height: 100% !important;
+      // height: 100% !important;
+    }
+
+    .ace_scroller {
+      overflow: scroll;
     }
   }
 }
@@ -637,11 +641,16 @@ div.tags-list{
 
 .detail,
 .detail_preview{
+  *{
+    width: 100%;
+  }
+  
   ul{
     display: block;
     list-style-type: disc;
     margin-left: 2em;
     li{
+      width: 100%;
       display: list-item;
       list-style-type: disc;
       background-color: transparent;

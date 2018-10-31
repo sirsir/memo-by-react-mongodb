@@ -20,7 +20,7 @@ var port = process.env.API_PORT || 3002;
 // var mongoDB = 'mongodb://localhost:27017/sirMemo';
 
 var ip = require("ip").address();
-console.dir ( ip );
+// console.dir ( ip );
 
 // ip = 'localhost'
 
@@ -154,7 +154,8 @@ router.route('/memos')
 //   });
 })
 
-router.route('/memos/:memo_id')
+// router.route('/memos/:memo_id')
+router.route('/memos/delete/:memo_id')
 .delete(function(req, res) {
   let id = req.params.memo_id
   // console.log(JSON.stringify(req.body,null,"\t"))
@@ -239,9 +240,14 @@ router.route('/memos/search/:keyword')
          console.log("Memo.find()")
          if (err){
            res.send(err);
+           return;
          }
 
-         docs.forEach( doc =>  doc.addTimeStamp() )
+         if (docs) {
+           docs.forEach( doc =>  doc.addTimeStamp() )
+         }
+
+
          // docs[0].aaa='aaaaaaa'
          // console.log(docs[0])
          // docs.addTimeStamp()
@@ -266,7 +272,29 @@ router.route('/memos/search/:keyword')
 
   })
 
+  router.route('/js')
+  .get(function(req, res) {
+    console.log('/js')
+    res.send('sssss')
+    // res.json({ message: 'TEST router!' });
 
+    // Memo.find( {},function (err, docs) {
+    //   console.log("Memo.find()")
+    //   if (err){
+    //     res.send(err);
+    //   }
+    //
+    //   // console.log(docs[0])
+    //   // docs[0].addTimeStamp()
+    //   docs.forEach( doc =>  doc.addTimeStamp() )
+    //   // docs[0].aaa='aaaaaaa'
+    //   // console.log(docs[0])
+    //   // docs.addTimeStamp()
+    //   // console.log(docs[0])
+    //   res.send(docs);
+    // });
+
+  })
 
 //Adding a route to a specific comment based on the database ID
 // router.route('/comments/:comment_id')
@@ -301,6 +329,10 @@ router.route('/memos/search/:keyword')
 
 //Use our router configuration when we call /api
 app.use('/api', router);
+app.get('/js',function(req, res) {
+  console.log('/js')
+  res.send('sssss')
+})
 
 //starts the server and listens for requests
 app.listen(port,'0.0.0.0', function() {

@@ -9,14 +9,21 @@ import '../styles/App.scss';
 import MemoService from './services/MemoService.js'
 
 import TagsList from './TagsList';
+import SearchBox from './SearchBox';
+import SelectKeywords from './SelectKeywords';
+import Toolbar from './Toolbar';
+import FormNewItem from './FormNewItem';
+import FormEditItem from './FormEditItem';
+import ItemLinks from './ItemLinks';
+import ItemTags from './ItemTags';
 
 
 import { render } from 'react-dom';
 
 const ReactMarkdown = require('react-markdown')
 
-import brace from 'brace';
-import AceEditor from 'react-ace';
+// import brace from 'brace';
+// import AceEditor from 'react-ace';
 
 import 'brace/mode/javascript';
 import 'brace/theme/monokai';
@@ -54,6 +61,8 @@ var functions = {
     return newDate;
   },
 
+  //~~ Not in use
+  //~~ Replaced with mongodb fulltext search
   sir_searchstring: function (mainstring, searchstring) {
     if (!searchstring) {
       return true;
@@ -64,24 +73,6 @@ var functions = {
 
       let searchArray = searchstring.split('&&');
       //searchArray = searchstring.split("----");
-
-      /*
-      if (searchArray.length == 2) {
-        noArray = searchArray[1].split(",");
-
-        for (var i = 0; i < noArray.length; i++) {
-          var searchforNOArray = noArray[i].split("|");
-          for (var j = 0; j < searchforNOArray.length; j++) {
-            if (mainstring.toLowerCase().indexOf(searchforNOArray[j].toLowerCase()) != -1) {
-              return false;
-            }
-          }
-        }
-      }
-
-      searchforArray = searchArray[0].split(",");
-
-      */
 
       let searchforNOArray = [];
       let searchforArray = [];
@@ -109,7 +100,6 @@ var functions = {
         return false;
       }
 
-
       let bln_satisfyAll = true;
       searchforArray.forEach(function(keyword){
         if (mainstring.toLowerCase().indexOf(keyword.toLowerCase()) === -1) {
@@ -123,92 +113,10 @@ var functions = {
       } else {
         return true;
       }
-
-
-
-
-
-      /*
-      satisfy = 0;
-      for (var i = 0; i < searchforArray.length; i++) {
-        var searchforORArray = searchforArray[i].split("|");
-        for (var j = 0; j < searchforORArray.length; j++) {
-          if (mainstring.toLowerCase().indexOf(searchforORArray[j].toLowerCase()) != -1) {
-            satisfy += 1
-            break;
-          }
-        }
-
-        if (satisfy != i + 1) {
-          return false;
-        }
-
-      }
-
-      return true;
-      */
     }
-
   }
-
 }
 
-//=== LOGIN PROBLEM
-// function initApp(){
-//   document.getElementById('firebaseLoginButton')
-//         .addEventListener('click', loginToFirebase);
-// }
-//
-// window.onload = function() {
-//    initApp();
-//  }
-//
-//  function loginToFirebase(){
-//    auth.signInWithPopup(provider)
-//      .then((result) => {
-//        log('sssssss')
-//        const user = result.user;
-//        // this.setState({
-//        //   user
-//        // });
-//        saveUser2database(result.user)
-//      });
-//  }
-
-// function saveUser2database(user){
-//   // e.preventDefault();
-//   const usersRef = firebase.database().ref('users');
-//   // const users = {
-//   //   uid: this.state.user.uid,
-//   //   username: this.state.user.username,
-//   //   email: this.state.user.email,
-//   //   display
-//   // }
-//   const user2save = (({uid,email,displayName})=>({uid,email,displayName}))(user);
-//   // alert(JSON.stringify(user2save))
-//
-//   // user2save.last_login = functions.convertUTCDateToLocalDate(new Date())
-//   // user2save.last_login = functions.convertUTCDateToLocalDate(new Date()).toString();
-//   user2save.last_login = (new Date()).toString();
-//
-//   usersRef.orderByChild('uid').equalTo(user.uid).once('value',snapshot => {
-//     const userData = snapshot.val();
-//     const key = Object.keys(snapshot.val())[0];
-//     if (userData) {
-//       log(userData);
-//       // snapshot.ref.update({key :user2save})
-//       firebase.database().ref('users/'+key).update(user2save)
-//       // userData.update(user2save)
-//     } else {
-//       usersRef.push(user2save);
-//     }
-//   });
-//
-//   // this.setState({
-//   //   currentItem: '',
-//   //   username: ''
-//   // });
-// }
 
 class App extends Component {
   constructor() {
@@ -236,6 +144,10 @@ class App extends Component {
       searchKeyword: '',
       sortBy: '-time'
     }
+
+    this.refX={}
+
+
     this.handleChange = this.handleChange.bind(this);
     this.handleChangeNewItem = this.handleChangeNewItem.bind(this);
     this.handleChangeArray = this.handleChangeArray.bind(this);
@@ -249,9 +161,20 @@ class App extends Component {
     this.isItemChanged = this.isItemChanged.bind(this);
     // this.onAceChange = this.onAceChange.bind(this);
     this.previewMarkdown = this.previewMarkdown.bind(this);
-    this.clearSearchBox = this.clearSearchBox.bind(this);
     this.searchSearchBox = this.searchSearchBox.bind(this);
-    this.handleKeyPressSearchbox = this.handleKeyPressSearchbox.bind(this);
+    this.setSearchKeyword = this.setSearchKeyword.bind(this);
+
+    this.toggleDisplayState = this.toggleDisplayState.bind(this);
+    this.toggleItem = this.toggleItem.bind(this);
+    this.setRef = this.setRef.bind(this);
+    this.editItemGuiCancel = this.editItemGuiCancel.bind(this);
+    this.switchEditor = this.switchEditor.bind(this);
+
+
+
+
+
+
     // this.sortItem = this.sortItem.bind(this);
 
     // this.handleKeyPress = this.handleKeyPress.bind(this);
@@ -260,6 +183,7 @@ class App extends Component {
     // this.logout = this.logout.bind(this); // <-- add this line
     // this.saveUser2database = this.saveUser2database.bind(this);
   }
+
   updateTagsList(){
     let thisReact = this
     MemoService.getTags()
@@ -279,56 +203,8 @@ class App extends Component {
       })
     })
 
-
-    // var tagsList = [{tag: 'untagged', count: 0}]
-    //
-    // this.state.items.concat([this.state.currentItem]).forEach(function(item,idx){
-    //   if (item.tags.length === 0)
-    //   {
-    //     tagsList[0].count++
-    //   }
-    //   item.tags.forEach(function(tag){
-    //
-    //     // log(tag)
-    //     let tagObj = tagsList.find((element) => {
-    //       return element.tag === tag;
-    //     })
-    //
-    //     // log(tagObj)
-    //
-    //     if (tagObj){
-    //       tagObj.count++;
-    //     } else {
-    //       tagsList.push({
-    //         tag: tag,
-    //         count: 1
-    //       })
-    //     }
-    //
-    //   })
-    // })
-    //
-    // // tagsList.sort(function(a,b){log(a.tag);return itemsIdx2show.sort(function(a,b){return (a.tag >b .tag)})})
-    // tagsList.sort(function(a,b){
-    //   // log(a.tag > b.tag)
-    //   return (a.tag.localeCompare(b.tag))
-    // })
-    //
-    // // log(JSON.stringify(tagsList))
-    //
-    // this.setState({
-    //   tagsList: tagsList
-    // });
-
   }
-  // toggleEditItem(e){
-  //   log(e)
-  //   if (e.target !== e.currentTarget) {
-  //       var clickedItem = e.target.id;
-  //       log( clickedItem);
-  //   }
-  //   // e.stopPropagation();
-  // }
+
   handleInputChange(e,state){
     if (state === 'searchKeyword'){
       // log('state = searchKeyword')
@@ -344,9 +220,7 @@ class App extends Component {
       this.searchKeyword(e.target.value)
     }
   }
-  // updateEditForm(e,idx){
-  //
-  // }
+
   searchKeyword(keyword){
     let itemsIdx2show = []
 
@@ -476,33 +350,16 @@ class App extends Component {
     }
 
   }
-  // logout() {
-  //   auth.signOut()
-  //     .then(() => {
-  //       this.setState({
-  //         user: null
-  //       });
-  //     });
-  // }
-  // login() {
-  //   auth.signInWithPopup(provider)
-  //     .then((result) => {
-  //       const user = result.user;
-  //       this.setState({
-  //         user
-  //       });
-  //       // saveUser2database(result.user)
-  //     });
-  // }
+
   onTextareaChange(e,idx){
     // log(newValue)
     // this.setState({
       // editingDetail: newValue
-      // log(this.refs['_detail'+idx].value)
+      // log(this.refX['_detail'+idx].value)
 
       // setTimeout(()=>{
-      //   var editingDetail = this.refs['_detail'+idx].value
-      //   this.refs['__detail'+idx].editor.setValue(editingDetail)
+      //   var editingDetail = this.refX['_detail'+idx].value
+      //   this.refX['__detail'+idx].editor.setValue(editingDetail)
       // }, 500)
 
     // });
@@ -511,31 +368,98 @@ class App extends Component {
     // log(newValue)
     // this.setState({
       // editingDetail: newValue
-      // log(this.refs['_detail'+idx].value)
+      // log(this.refX['_detail'+idx].value)
       // setTimeout(()=>{
-      //   if (this.refs['_detail'+idx].value !== value){
-      //     this.refs['_detail'+idx].value = value
+      //   if (this.refX['_detail'+idx].value !== value){
+      //     this.refX['_detail'+idx].value = value
       //   }
       // }, 500)
 
 
-      // this.refs['__detail'+idx].editor.setValue(editingDetail)
+      // this.refX['__detail'+idx].editor.setValue(editingDetail)
     // });
   }
 
-  clearSearchBox(){
-    this.refs.searchbox.value = ''
-  }
-  handleKeyPressSearchbox(e){
-    if (e.key === 'Enter') {
-     this.searchSearchBox()
+  setKeywordCache(keyword){
+    var keywords = []
+    try {
+      keywords = JSON.parse(
+        localStorage.getItem('memoSearchbox')
+      )
+    } catch (e) {
+        // return false;
     }
+
+    if (! Array.isArray(keywords)){
+      keywords = []
+    }
+
+    if ( keywords.indexOf(keyword) === -1){
+      keywords.push(keyword)
+    }
+
+    // let keyword = this.refX.searchbox.value
+    localStorage.setItem('memoSearchbox', JSON.stringify(keywords));
+    // localStorage.setItem('memoSearchbox', keywords);
   }
-  searchSearchBox(){
-    let keyword = this.refs.searchbox.value
+
+  getKeywordCache(getArray=false){
+
+    // localStorage.getItem('memoSearchbox') || 'todo'
+
+    var keywords = []
+    try {
+      keywords = JSON.parse(
+        localStorage.getItem('memoSearchbox')
+      )
+    } catch (e) {
+      return ['todo']
+        // return false;
+    }
+
+    if ( (! Array.isArray(keywords)) || keywords.length === 0){
+      return ['todo']
+    }
+
+    if ( getArray ){
+      return keywords
+    } else {
+      return keywords[keywords.length-1]
+    }
+
+  }
+
+  setSearchKeyword(keyword){
+
+    let keywords = this.state.searchKeywords
+    // console.log(keywords)
+
+    let idx = keywords.indexOf(keyword)
+
+    if (idx !== -1){
+      keywords.splice(idx,1)
+    }
+
+    keywords.push(keyword)
+
+    this.setState({
+      searchKeywords: keywords
+    });
+
+    // console.log(this.state.searchKeywords)
+    this.refX.searchbox.value = keyword
+    localStorage.setItem('memoSearchbox', JSON.stringify(keywords));
+
+  }
+
+  searchSearchBox(keyword){
+
+    this.setKeywordCache(keyword)
+
 
     log(keyword)
     let thisReact = this
+
     MemoService.find(keyword)
     .then(function (res) {
       let items = res;
@@ -543,21 +467,27 @@ class App extends Component {
       // item = res
       thisReact.setStateFromItem(res)
     })
+
+    thisReact.setState({
+      sortBy: ''
+    });
   }
 
-  swithchEditor(e,idx){
+  switchEditor(e,idx){
     e.preventDefault();
 
-    if (this.state.displayAceEditor){
-      this.refs['_detail'+idx].value = this.refs['__detail'+idx].editor.getValue()
+    let thisReact = this
+
+    if (thisReact.state.displayAceEditor){
+      thisReact.refX['_detail'+idx].value = thisReact.refX['__detail'+idx].editor.getValue()
     } else {
-      console.log(this.refs['_detail'+idx].value)
-      this.refs['__detail'+idx].editor.setValue(this.refs['_detail'+idx].value)
-      // this.refs['__detail'+idx].editor.setValue('aaaa')
+      //console.log(thisReact.refX['_detail'+idx].value)
+      thisReact.refX['__detail'+idx].editor.setValue(thisReact.refX['_detail'+idx].value)
+      // this.refX['__detail'+idx].editor.setValue('aaaa')
     }
 
-    this.setState({
-      displayAceEditor: ! this.state.displayAceEditor
+    thisReact.setState({
+      displayAceEditor: ! thisReact.state.displayAceEditor
     })
 
 
@@ -572,27 +502,27 @@ class App extends Component {
     let editingDetail = ''
 
     if (this.state.displayAceEditor){
-      editingDetail = this.refs['__detail'+idx].editor.getValue()
+      editingDetail = this.refX['__detail'+idx].editor.getValue()
     } else {
-      editingDetail = this.refs['_detail'+idx].value
+      editingDetail = this.refX['_detail'+idx].value
     }
 
 
 
     items[idx].detail = editingDetail
 
-    // log(this.refs['__detailPreview'+idx].children[0] )
-    // log(this.refs['__detailPreview'+idx].children[0].value )
-    // log(this.refs['__detailPreview'+idx].children[0].source )
+    // log(this.refX['__detailPreview'+idx].children[0] )
+    // log(this.refX['__detailPreview'+idx].children[0].value )
+    // log(this.refX['__detailPreview'+idx].children[0].source )
 
-    // this.refs['__detailPreview'+idx].children[0].value = 'bbbb'
-    this.refs['__detailPreview'+idx].value = editingDetail
+    // this.refX['__detailPreview'+idx].children[0].value = 'bbbb'
+    this.refX['__detailPreview'+idx].value = editingDetail
     this.setState({
       editingDetail: editingDetail,
       items: items
     });
 
-    // this.refs['__detail'+idx].editor.setValue(editingDetail)
+    // this.refX['__detail'+idx].editor.setValue(editingDetail)
 
 
   }
@@ -678,12 +608,12 @@ class App extends Component {
     let _id = e.target.idx.value
     let detail = ''
     if (this.state.displayAceEditor){
-      // let aceDetailElement = this.refs['__detail'+_id]
-      detail = this.refs['__detail'+_id].editor.getValue()
+      // let aceDetailElement = this.refX['__detail'+_id]
+      detail = this.refX['__detail'+_id].editor.getValue()
     } else {
 
-      detail = this.refs['_detail'+_id].value
-      // this.refs['__detail'+idx].editor.setValue('aaaa')
+      detail = this.refX['_detail'+_id].value
+      // this.refX['__detail'+idx].editor.setValue('aaaa')
     }
 
     // log(aceDetailElement)
@@ -756,11 +686,6 @@ class App extends Component {
       'last_login' : 'Thu Dec 14 2017 14:07:39 GMT+0700 (+07)',
       'uid' : '0eSb19kpk5dj6eUzWllnYjC1zaj1'
     }
-    let thisReact = this
-    this.setState({
-      user: user,
-      searchKeyword: 'todo'
-     });
     // auth.onAuthStateChanged((user) => {
     //   if (user) {
     //     this.setState({ user });
@@ -773,10 +698,17 @@ class App extends Component {
     //   // object of all the users
     //   log(memos);
     // });
+    // log(this.refX)
+    // let keyword2search = localStorage.getItem('memoSearchbox') || 'todo'
+    let keyword2search = this.getKeywordCache(true)
+    // this.refX.searchbox.value = keyword2search
+    let thisReact = this
+    this.setState({
+      user: user,
+      searchKeywords: keyword2search
+     });
 
-
-
-    MemoService.find('todo')
+    MemoService.find(keyword2search[keyword2search.length-1])
     .then( (res) => {
       let items = res;
       // log(res)
@@ -931,24 +863,36 @@ class App extends Component {
 
 
   }
+  setRef(input,node) {
+    // log('bbb')
+    // log(input)
+    // log(node)
+    // log(this.refX)
+       this.refX[input] = node
+       // log(this.refX)
+       // this.childInput = input;
+   }
   editItemGui( e,idx) {
     e.preventDefault()
     e.stopPropagation()
 
     // log(React.version)
     // log(idx)
-    // log(ReactDOM.findDOMNode(this.refs.myInput))
-    // log(ReactDOM.findDOMNode(this.refs.myInput).value)
+    // log(ReactDOM.findDOMNode(this.refX.myInput))
+    // log(ReactDOM.findDOMNode(this.refX.myInput).value)
 
-    // log(ReactDOM.findDOMNode(this.refs['_title'+idx]))
+    // log(ReactDOM.findDOMNode(this.refX['_title'+idx]))
     // log(this.state.itemsExt)
-    this.refs['_title'+idx].value = this.state.items[idx].title
-    this.refs['_detail'+idx].value = this.state.items[idx].detail
-    this.refs['_links'+idx].value = this.state.items[idx].links? this.state.items[idx].links.join('\n'): ''
-    // ReactDOM.findDOMNode(this.refs['_title'+idx]).value = this.state.items[idx].title
-    // ReactDOM.findDOMNode(this.refs['_detail'+idx]).value = this.state.items[idx].detail
-    // ReactDOM.findDOMNode(this.refs['_links'+idx]).value = this.state.items[idx].links? this.state.items[idx].links.join('\n'): ''
-    // findDOMNode(this.refs.myInput).focus();
+    // log('aaaa')
+    log(this.refX)
+    this.refX['_title'+idx].value = this.state.items[idx].title
+    // log('aaaa')
+    this.refX['_detail'+idx].value = this.state.items[idx].detail
+    this.refX['_links'+idx].value = this.state.items[idx].links? this.state.items[idx].links.join('\n'): ''
+    // ReactDOM.findDOMNode(this.refX['_title'+idx]).value = this.state.items[idx].title
+    // ReactDOM.findDOMNode(this.refX['_detail'+idx]).value = this.state.items[idx].detail
+    // ReactDOM.findDOMNode(this.refX['_links'+idx]).value = this.state.items[idx].links? this.state.items[idx].links.join('\n'): ''
+    // findDOMNode(this.refX.myInput).focus();
 
     // log(this._title)
     // log(React.Children.count(this._title))
@@ -970,17 +914,17 @@ class App extends Component {
   isItemChanged(idx){
     // return true
     // log(this.state.items[idx].title)
-    if (! this.refs['_title'+idx]
-      || ! this.refs['_detail'+idx]
-      || ! this.refs['_links'+idx]
+    if (! this.refX['_title'+idx]
+      || ! this.refX['_detail'+idx]
+      || ! this.refX['_links'+idx]
     ) {
       return false
     }
-    // log(this.refs['_title'+idx].value)
+    // log(this.refX['_title'+idx].value)
     if (
-      this.refs['_title'+idx].value !== this.state.items[idx].title
-      || this.refs['_detail'+idx].value !== this.state.items[idx].detail
-      || this.refs['_links'+idx].value !== (this.state.items[idx].links? this.state.items[idx].links.join('\n'): '')
+      this.refX['_title'+idx].value !== this.state.items[idx].title
+      || this.refX['_detail'+idx].value !== this.state.items[idx].detail
+      || this.refX['_links'+idx].value !== (this.state.items[idx].links? this.state.items[idx].links.join('\n'): '')
     ) {
       // log(165)
       log(true)
@@ -1061,6 +1005,7 @@ class App extends Component {
     });
   }
   toggleDisplayState(item){
+    // log(this.state.display)
     var display = JSON.parse(JSON.stringify(this.state.display))
     display[item] = ! display[item]
     this.setState({
@@ -1068,6 +1013,7 @@ class App extends Component {
     });
   }
   editItemGuiCancel( idx) {
+
 
     var itemsExt = JSON.parse(JSON.stringify(this.state.itemsExt))
     itemsExt[idx].editMode = ! itemsExt[idx].editMode
@@ -1154,8 +1100,9 @@ class App extends Component {
 
 
   }
-  createTagCheckbox(tagsAll,tagsHere,itemIdx){
+  createTagCheckbox(tagsAll, tagsHere, itemIdx, changeCheckboxTag){
     let thisReact = this
+    // let changeCheckboxTag = this.changeCheckboxTag
 
     return (
       <div className='tag-checkboxes'>
@@ -1166,13 +1113,15 @@ class App extends Component {
             let checked = tagsHere.includes(tag.tag)?
               'checked':false;
 
+                // onChange={thisReact.changeCheckboxTag( itemIdx, tag.tag)}
+
             if (tag.tag !== ''){
               return (
                   <div key={idx}>
                     <input
                       type="checkbox"
-                      onChange={thisReact.changeCheckboxTag.bind(this, itemIdx, tag.tag)}
                       checked={checked}
+                      onChange={(e)=>{changeCheckboxTag( itemIdx, tag.tag)}}
                       />
                     <label>{tag.tag}</label>
                   </div>
@@ -1194,200 +1143,56 @@ class App extends Component {
         <header>
           <div className="wrapper">
             <h1>Memo+Todo+Bookmarks</h1>
-            {
-              /*
-              this.state.user ?
-              <div className='right'>
-                <div className='user-profile'>
-                  <img src={this.state.user.photoURL} />
-                </div>
-                <button onClick={this.logout}>Logout</button>
-              </div>
-
-              :
-              <button id='firebaseLoginButton' onClick={this.login}>Log In</button>
-              */
-            }
           </div>
         </header>
         {this.state.user ?
           <div>
             <div className='container'>
-            <section id="searchbox">
-              <div id="searchbox-box">
-              {
-                /*
-                <input autoComplete="off" autoCorrect="off" className="form-control input-lg" id="search-input" placeholder="Type in keyword here in format 'keyword1&&keyword2&&-keywordX1'" spellCheck="false" tabIndex="1" onChange={(e) => this.handleInputChange(e,'searchKeyword')} value={this.state.searchKeyword}/>
-                */
-              }
-                <input ref='searchbox' autoComplete="off" autoCorrect="off" className="form-control input-lg" id="search-input" placeholder="Type in keyword here in format 'keyword1&&keyword2&&-keywordX1'" spellCheck="false" tabIndex="1" onKeyPress={this.handleKeyPressSearchbox} defaultValue='todo'/>
-              </div>
-             <div id="searchbox-search-icon">
-                <div className="table"><a aria-hidden="true" className="fa fa-search" href="#" onClick={this.searchSearchBox} id="search-clear"><span className="sr-only">Search</span></a></div>
-             </div>
-             <div id="searchbox-clear-icon">
-                <div className="table"><a aria-hidden="true" className="fa fa-times-circle" href="#" onClick={this.clearSearchBox} id="search-clear"><span className="sr-only">Clear search</span></a></div>
-             </div>
-            </section>
-            <div id="tools">
-              <div id="addItemButton">
-                <div className="table"><a aria-hidden="true" className="fa fa-plus-square" href="#" onClick={() => {this.toggleDisplayState('newItem')}} >Add new item</a></div>
-              </div>
-              <div id="showTagsListButton">
-                <div className="table"><a aria-hidden="true" className="fa fa-tags" href="#" onClick={() => {this.toggleDisplayState('tagsList')}} >{this.state.display.tagsList? 'Hide tags list': 'Show tags list'}</a></div>
-              </div>
-              {this.state.itemsIdx2show.length !== this.state.items.length ?
-                <div id="showAll">
-                  <div className="table"><a aria-hidden="true" className="fa fa-undo" href="#" onClick={this.showAllItems} >Show all</a></div>
-                </div>:null
-              }
-              { this.state.itemsExt.reduce((boolOut, itemExt)=>{return boolOut && (! itemExt.collapse)},true) === false?
-                <div id="expandAll">
-                  <div className="table"><a aria-hidden="true" className="fa fa-plus-square-o" href="#" onClick={() => {this.toggleItem(false)}} >Expand all</a></div>
-                </div>
-                :
-                null
-              }
-              { this.state.itemsExt.reduce((boolOut, itemExt)=>{return boolOut && (itemExt.collapse)},true) === false?
-                <div id="collapseAll">
-                  <div className="table"><a aria-hidden="true" className="fa fa-minus-square-o" href="#" onClick={() => {this.toggleItem(true)}} >Collapse all</a></div>
-                </div>
-                :
-                null
-              }
-              <div id="sort">
+            <SearchBox
+              searchSearchBox={this.searchSearchBox}
+              setRef={this.setRef}
+              refX={this.refX}
+              keyword={this.state.searchKeywords[this.state.searchKeywords.length-1]}
+            >
+            </SearchBox>
+            <SelectKeywords
+              setSearchKeyword={this.setSearchKeyword}
+              keywords={this.state.searchKeywords}
+            >
+            </SelectKeywords>
 
-                <div className="table">
-                <div>Sort:</div>
-                {
-                  this.state.sortBy !== 'title'?
-                  <a aria-hidden="true"
-                    className="fa fa-sort-alpha-asc"
-                    href="#"
-                    onClick={
-                      (e)=>this.sortItem(e,'title')}
-                  ></a>
-                  :
-                  null
-                }
-                {
-                  this.state.sortBy !== '-title'?
-                  <a aria-hidden="true"
-                    className="fa fa-sort-alpha-desc"
-                    href="#"
-                    onClick={
-                      (e)=>this.sortItem(e,'-title')
-                    }
-                  ></a>
-                  :
-                  null
-                }
-                {
-                  this.state.sortBy !== 'time'?
-                  <a aria-hidden="true"
-                    className="fa fa-sort-numeric-asc"
-                    href="#"
-                    onClick={
-                      (e)=>this.sortItem(e,'time')
-                    }
-                  ></a>
-                  :
-                  null
-                }
-                {
-                  this.state.sortBy !== '-time'?
-                  <a aria-hidden="true"
-                    className="fa fa-sort-numeric-desc"
-                    href="#"
-                    onClick={
-                      (e)=>this.sortItem(e,'-time')
-                    }
-                  ></a>
-                  :
-                  null
-                }
-                </div>
-              </div>
-            </div>
-            <section className={this.state.display.newItem ? 'add-item' : 'add-item displayNone'}>
-              <form onSubmit={this.handleSubmit}>
-                {/*
-                  <input type="hidden" name="username" placeholder="What's your name?" readOnly="true" value={this.state.user.displayName || this.state.user.email } />
-                  <div className='form-label'>Title: </div>
-                  <input type="text" name="title" placeholder="title?" onChange={this.handleChangeNewItem} value={this.state.currentItem.title} />
-                  <div className='form-label'>Tags: </div>
-                  {this.createTagCheckbox(this.state.tagsList,this.state.currentItem.tags,-1)}
-                  <input type="text" name="tags" placeholder="tags (separated by ,)" onChange={this.handleChangeArray} value={this.state.currentItem.tags} />
-                  <div className='form-label'>Detail: </div>
-                  <textarea type="text" name="detail" placeholder="Details?" onChange={this.handleChange} value={this.state.currentItem.detail} />
-                  <div className='form-label'>Link: </div>
-                  <textarea type="text" name="links" placeholder="related links" onChange={this.handleChangeArray} value={this.state.currentItem.links} />
-                */}
-                <div className='form-label'>Title: </div>
-                <input type="text" name="title" placeholder="title?"  />
-                <div className='form-label'>Tags: </div>
-                {this.createTagCheckbox(this.state.tagsList,this.state.currentItem.tags,-1)}
-                <input type="text" name="tags" placeholder="tags (separated by ,)" onChange={this.handleChangeArray} value={this.state.currentItem.tags} />
-                <div className='form-label'>Detail: </div>
-                <textarea type="text" name="detail" placeholder="Details?" />
-                <div className='form-label'>Link: </div>
-                <textarea type="text" name="links" placeholder="related links" />
-                <button>Add Item</button>
-              </form>
-            </section>
-            <TagsList display={this.state.display.tagsList} tagsList={this.state.tagsList} _searchTag={this.searchTag}>
+            <Toolbar display={this.state.display}
+            itemsIdx2show={this.state.itemsIdx2show}
+            items={this.state.items}
+            itemsExt={this.state.itemsExt}
+            sortBy={this.state.sortBy}
+            sortItem={this.sortItem}
+            toggleDisplayState={this.toggleDisplayState}
+            toggleItem={this.toggleItem}
+            showAllItems={this.showAllItems}
+            >
+            </Toolbar>
 
+            <FormNewItem
+              state={this.state}
+              handleSubmit={this.handleSubmit}
+              createTagCheckbox={this.createTagCheckbox}
+              changeCheckboxTag={this.changeCheckboxTag}
+              handleChangeArray={this.handleChangeArray}
+            >
+            </FormNewItem>
+
+            <TagsList display={this.state.display.tagsList}
+             tagsList={this.state.tagsList}
+              _searchTag={this.searchTag}
+            >
             </TagsList>
+
             <section className='display-item'>
                 <div className="wrapper">
                   <ul>
                     {this.state.itemsIdx2show.map((itemsIdx,idx) => {
                       let item = this.state.items[itemsIdx]
-                      let links = ''
-                      let tags = ''
-
-                      if (item.links){
-                        links = (
-                          <div className='links'>
-                            <i className="fa fa-link" aria-hidden="true"></i>
-                            {/*
-                              Links:
-                              */
-                            }
-                            <ul>
-                              {
-                                  item.links.map((link,idx2) =>
-                                    <li key={idx2}>
-                                      <a href={link}>{link}</a>
-                                    </li>
-                                  )
-
-                              }
-                            </ul>
-                          </div>
-                          )
-                      }
-
-                      if (item.tags){
-                        tags = (
-                          <div className='tags'>
-                            <i className="fa fa-tags" aria-hidden="true"></i>
-                              {/*
-                                Tags:
-                                */
-                              }
-                              <ul className="posttags2">
-                                {
-                                    item.tags.map((tag,idx2) =>
-                                        <li key={idx2} >
-                                          <a href=''>{tag} <span></span></a>
-                                        </li>
-                                      )
-                                }
-                              </ul>
-                            </div>
-                          )
-                      }
 
                       return (
                         <li key={idx} >
@@ -1418,8 +1223,10 @@ class App extends Component {
                                 <ReactMarkdown source={item.detail} />
                                 </div>
                               </div>
-                              {links}
-                              {tags}
+                              <ItemLinks links={item.links}>
+                              </ItemLinks>
+                              <ItemTags tags={item.tags}>
+                              </ItemTags>
                             </div>
                           </div>
                           <div className={this.state.itemsExt[itemsIdx].editMode ? 'edit-mode' : 'edit-mode displayNone'}>
@@ -1439,141 +1246,23 @@ class App extends Component {
                               </div>
                             }
                           </div>
-                            <form onSubmit={this.handleSubmitEdit} >
-                              <div className='right'>
-                                {
-                                  /*
-                                  JSON.stringify(this.state.items[itemsIdx]) !== JSON.stringify(this.state.itemsExt[itemsIdx].lastState) ?
-
-                                  this.isItemChanged(itemsIdx) ?
-                                  <button type="submit" className="btn-link">
-                                    <a className="btn btn-default" href='#' onClick={(e) => this.handleSubmitEdit} aria-label="Settings">
-                                      <i className="fa fa-floppy-o" aria-hidden="true"></i>
-                                    </a>
-                                  </button>
-                                  :
-                                  null
-                                  */
-                                }
-                                <button type="submit" className="btn-link">
-                                  <a className="btn btn-default" href='#' onClick={(e) => this.handleSubmitEdit} aria-label="Settings">
-                                    <i className="fa fa-floppy-o" aria-hidden="true"></i>
-                                  </a>
-                                </button>
-
-                                {
-                                  /*
-                                  <a className="btn btn-danger" href="#" onClick={() => this.editItemGuiCancel( itemsIdx)} aria-label="Delete">
-                                    <i className="fa fa-window-close" aria-hidden="true"></i>
-                                  </a>
-
-                                  */
-                                }
-                                <a className="btn btn-danger" href="#" onClick={() => this.editItemGuiCancel( itemsIdx)} aria-label="Delete">
-                                  cancel
-                                </a>
-
-                              </div>
-                              {
-                                /*
-                                <button type="button" onClick={() => this.editItemGuiCancel( itemsIdx)}>Cancel</button>
-                                <input type="hidden" name="id" placeholder="id" readOnly="true" value={item.id} />
-                                <input type="hidden" name="idx" placeholder="idx" readOnly="true" value={itemsIdx} />
-                                <div className='form-label'>Title: </div>
-                                <input type="text" name="title" placeholder="title?" onChange={(e) => this.handleChange(e, itemsIdx)} value={this.state.items[itemsIdx].title} />
-                                <input type="text" name="tags" placeholder="tags (separated by ,)" onChange={(e) => this.handleChangeArray(e, itemsIdx)} value={this.state.items[itemsIdx].tags.join(',')} />
-                                <div className='form-label'>Detail: </div>
-                                <textarea type="text" name="detail" placeholder="Details?" onChange={(e) => this.handleChange(e, itemsIdx)} value={this.state.items[itemsIdx].detail} />
-                                <div className='form-label'>Links: </div>
-                                <textarea type="text" name="links" placeholder="related links" onChange={(e) => this.handleChangeArray(e, itemsIdx)} value={this.state.items[itemsIdx].links? this.state.items[itemsIdx].links.join('\n'): ''} />
-                                <input type="text" name="title" placeholder="title?" value={this.state.items[itemsIdx].title} ref={input => this._title = input} />
-                                <input type="text" name="title" placeholder="title?" value={this.state.items[itemsIdx].title} ref={input => this.refs['_title'+itemsIdx] = input} />
-                                */
-                              }
-                              <input type="hidden" name="id" placeholder="id" readOnly="true" value={item.id} />
-                              <input type="hidden" name="idx" placeholder="idx" readOnly="true" value={itemsIdx} />
-                              <div className='form-label'>Title: </div>
-                              <input type="text" name="title" placeholder="title?" onChange={(e)=> {}} defaultValue={this.state.items[itemsIdx].title } ref={'_title'+itemsIdx} />
-                              <div className='form-label'>Tags: </div>
-                              {
-                                /*
-                                <TokenAutocomplete
-                                  placeholder="type to limit suggestions"
-                                  defaultValues={['apple']}
-                                  options={['apple', 'banana', 'carrot', 'watermelon']}
-                                />
-                                <PowerSelect
-                                  options={['React', 'Ember', 'Angular', 'Vue', 'Preact', 'Inferno']}
-                                  selected={this.state.selectedOption}
-                                  onChange={(e) => console.log('aa')}
-                                />
-                                <PowerSelectMultiple
-                                  options={['React', 'Ember', 'Angular', 'Vue', 'Preact', 'Inferno']}
-                                  selected={this.state.selectedOption}
-                                  onChange={(e) => console.log('aa')}
-                                  placeholder="Select your favourite frameworks"
-                                />
-
-
-                                {this.createTagCheckbox(this.state.tagsList,this.state.items[itemsIdx].tags)}
-                                */
-
-                              }
-
-                              {this.createTagCheckbox(this.state.tagsList,this.state.items[itemsIdx].tags,itemsIdx)}
-                              <input type="text" name="tags" placeholder="tags (separated by ,)" onChange={(e) => this.handleChangeArray(e, itemsIdx)} value={this.state.items[itemsIdx].tags.join(',')} />
-                              <div className='form-label'>
-                              <span>Detail: </span>
-                              <div className='btn-switchEditor' >
-                              <input type='button' onClick={(e) => this.swithchEditor(e,itemsIdx)} value='Switch Editor' />
-                              </div>
-                                <div className='btn-detail_preview right'>
-
-                                 <input type='button' onClick={(e) => this.previewMarkdown(e,itemsIdx)} value='Markdown update' />
-                                </div>
-                              </div>
-
-                              <div className={this.state.displayAceEditor ? 'container4ace' : 'container4ace displayNone'}>
-                                <AceEditor
-                                  mode="javascript"
-                                  theme="monokai"
-                                  ref={'__detail'+itemsIdx}
-                                  onChange={(value)=>this.onAceChange(value,itemsIdx)}
-                                  value={this.state.items[itemsIdx].detail}
-                                  setOptions={{
-                                    highlightActiveLine: true,
-                                    showLineNumbers: true,
-                                    tabSize: 2,
-                                    minLines: 20,
-                                    maxLines: 40
-                                  }}
-                                  editorProps={{$blockScrolling: true}}
-                                 />
-
-                               </div>
-                               <textarea type="text" name="detail" placeholder="Details?" className={this.state.displayAceEditor ? 'displayNone' : 'container4ace'} onChange={(e)=> this.onTextareaChange(e,itemsIdx)} defaultValue={this.state.items[itemsIdx].detail}  ref={'_detail'+itemsIdx}/>
-                               <div className='detail_preview'  ref={'__detailPreview'+itemsIdx}>
-                               <ReactMarkdown source={this.state.editingDetail}/>
-
-                              </div>
-
-
-                               {
-                                 /*
-                                 <textarea type="text" name="detail" placeholder="Details?" className={this.state.displayAceEditor ? 'displayNone' : ''} onChange={(e)=> this.onTextareaChange(e,itemsIdx)} defaultValue={this.state.items[itemsIdx].detail}  ref={'_detail'+itemsIdx}/>
-
-                                                                 <div ref={'s__detailPreview'+itemsIdx} />
-                                 <ReactMarkdown source={this.state.editingDetail} />
-                                                                     autoScrollEditorIntoView: true,
-                                                                 editorProps={{$blockScrolling: true}}
-                                 <textarea type="text" name="detail" placeholder="Details?" value={this.state.items[itemsIdx].detail}  ref={'_detail'+itemsIdx}/>
-                                 */
-                               }
-
-                              <div className='form-label'>Links: </div>
-                              <textarea type="text" name="links" placeholder="related links" onChange={(e)=> {}} defaultValue={this.state.items[itemsIdx].links? this.state.items[itemsIdx].links.join('\n'): ''} ref={'_links'+itemsIdx} />
-
-                            </form>
+                          <FormEditItem
+                            item={item}
+                            state={this.state}
+                            itemsIdx={itemsIdx}
+                            refX={this.refX}
+                            handleSubmitEdit={this.handleSubmitEdit}
+                            handleChangeArray={this.handleChangeArray}
+                            editItemGuiCancel={this.editItemGuiCancel}
+                            createTagCheckbox={this.createTagCheckbox}
+                            changeCheckboxTag={this.changeCheckboxTag}
+                            switchEditor={this.switchEditor}
+                            previewMarkdown={this.previewMarkdown}
+                            onAceChange={this.onAceChange}
+                            onTextareaChange={this.onTextareaChange}
+                            setRef={this.setRef}
+                          >
+                          </FormEditItem>
                           </div>
                         </li>
                       )
